@@ -14,9 +14,13 @@ import os
 username = os.getenv('TV_USERNAME', 'your_username')
 password = os.getenv('TV_PASSWORD', 'your_password')
 
-# Initialize KiteConnect with API credentials
-kite = KiteConnect(api_key="your_api_key")
-kite.set_access_token("your_access_token")
+# Load Kite API credentials from environment variables
+kite_api_key = os.getenv('KITE_API_KEY', 'your_api_key')
+kite_access_token = os.getenv('KITE_ACCESS_TOKEN', 'your_access_token')
+
+# Initialize KiteConnect
+kite = KiteConnect(api_key=kite_api_key)
+kite.set_access_token(kite_access_token)
 
 # Initialize TradingView datafeed
 tv = TvDatafeed(username, password)
