@@ -1,58 +1,100 @@
-# Trading Bot
+# 📈 Logistic Regression-Based Trading Bot
 
-## Installation
+This project implements an automated trading bot that uses a logistic regression model trained on historical price features to generate buy/sell signals for a stock (e.g., AAPL). The bot fetches real-time data, makes predictions, and places orders via the Kite Connect API.
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/your-username/trading-bot.git
-   ```
-2. Install the required dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Set up your TradingView and Kite Connect API credentials:
-   - Create a `.env` file in the project root directory.
-   - Add the following environment variables:
-     ```
-     TV_USERNAME=your_tradingview_username
-     TV_PASSWORD=your_tradingview_password
-     KITE_API_KEY=your_kite_connect_api_key
-     KITE_ACCESS_TOKEN=your_kite_connect_access_token
-     ```
+---
 
-## Usage
+## 🧰 Overview
 
-1. Run the trading simulation:
-   ```
-   python main.py
-   ```
-   The bot will run the trading strategy during market hours (Monday-Friday, 10:15 AM - 3:30 PM) and save the trade log to `paper_trades_log.json`.
+### 1. `model.py`
 
-2. Monitor the simulation log file:
-   ```
-   tail -f simulation.log
-   ```
-   The log file will contain information about the strategy execution and any errors that may occur.
+* Fetches historical OHLCV data from TradingView.
+* Trains a logistic regression model on daily return direction.
+* Standardizes features with `StandardScaler`.
+* Saves trained model (`linear_model.pkl`) and scaler (`scaler.pkl`) to disk.
 
-## API
+### 2. `strategy.py`
 
-The project consists of the following main modules:
+* Loads the trained model and scaler.
+* Fetches the last 5 days of daily price data.
+* Predicts signal (1 = BUY, 0 = SELL) based on latest day's features.
+* Places orders using Kite Connect API.
+* Logs each trade with timestamp, action, price, and quantity.
 
-1. `log_data.py`: Defines a global `trade_log` list to store executed trades.
-2. `main.py`: Runs the trading simulation, scheduling the strategy execution and saving the trade log.
-3. `model.py`: Fetches historical data, trains a logistic regression model, and saves the trained model and scaler.
-4. `strategy.py`: Implements the trading strategy, fetches market data, makes predictions using the trained model, and places orders using the Kite Connect API.
+### 3. `main.py`
 
-## Contributing
+* Uses the `schedule` module to run the strategy during market hours (Mon–Fri, 10:15–3:30).
+* Executes `run_strategy()` if market is open.
+* Saves trade logs into a JSON file (`paper_trades_log.json`).
 
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-3. Make your changes and commit them.
-4. Push your branch to your forked repository.
-5. Submit a pull request to the main repository.
+---
 
+## ⚙️ Setup
 
+### Required Libraries
 
-## Testing
+* `pandas`, `numpy`
+* `scikit-learn`
+* `joblib`
+* `tvDatafeed`
+* `kiteconnect`
+* `schedule`, `logging`, `json`, `os`
 
-The project currently does not include any automated tests. However, you can manually test the functionality by running the simulation and observing the log file and trade log.
+### Environment Variables
+
+Set the following environment variables securely:
+
+* `TV_USERNAME` and `TV_PASSWORD` for TradingView
+* `KITE_API_KEY` and `KITE_ACCESS_TOKEN` for Zerodha Kite
+
+---
+
+## 🚀 Run Instructions
+
+### 1. Train the Model
+
+```bash
+python model.py
+```
+
+This will fetch historical data, train the logistic regression model, and save it.
+
+### 2. Run the Bot
+
+```bash
+python main.py
+```
+
+The bot will check every 60 seconds and run the strategy only during market hours.
+
+---
+
+## 🔎 Strategy Logic
+
+* Features: `[open, high, low, close, volume]`
+* Target: `1 if next-day return > 0 else 0`
+* If signal = 1 ➔ place a BUY order
+* If signal = 0 ➔ place a SELL order
+* Order size: 10 units (customizable)
+
+---
+
+## 📊 Trade Logging
+
+All trades are stored in `paper_trades_log.json` with structure:
+
+```json
+{
+  "timestamp": "YYYY-MM-DD HH:MM:SS",
+  "symbol": "AAPL",
+  "action": "BUY" or "SELL",
+  "quantity": 10,
+  "price": 123.45
+}
+```
+
+---
+
+## 👤 Author
+
+**Nitesh Jaiswal**
